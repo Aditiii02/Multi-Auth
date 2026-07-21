@@ -54,12 +54,11 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'multi-auth-env', variable: 'ENV_FILE')]) {
                     sh '''
-                    sudo install \
-                        -o ubuntu \
-                        -g ubuntu \
-                        -m 600 \
-                        "$ENV_FILE" \
-                        "$APP_DIR/.env"
+                        cp "$ENV_FILE" "$APP_DIR/.env"
+
+                        sudo /usr/bin/chown ubuntu:ubuntu "$APP_DIR/.env"
+
+                        sudo /usr/bin/chmod 600 "$APP_DIR/.env"
                     '''
                 }
             }
@@ -113,8 +112,8 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                sleep 10
-                curl --fail "$HEALTH_URL"
+                    sleep 10
+                    curl --fail "$HEALTH_URL"
                 '''
             }
         }
@@ -140,16 +139,22 @@ pipeline {
 
                 sudo -u ubuntu bash -c "
                     cd $APP_DIR
+
                     git reset --hard $PREVIOUS_COMMIT
+
                     npm install
+
                     pm2 restart multi-auth
+
                     pm2 save
                 "
 
                 echo "Rollback completed."
 
             else
+
                 echo "Rollback skipped."
+
             fi
             '''
         }
