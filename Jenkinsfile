@@ -31,6 +31,8 @@ pipeline {
                 sudo -u ubuntu bash -c "
                     cd $APP_DIR
                     git rev-parse HEAD > /tmp/multiauth_previous_commit
+                    echo Current commit:
+                    cat /tmp/multiauth_previous_commit
                 "
                 '''
             }
@@ -52,9 +54,12 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'multi-auth-env', variable: 'ENV_FILE')]) {
                     sh '''
-                    sudo -u ubuntu bash -c "
-                        cp '$ENV_FILE' $APP_DIR/.env
-                    "
+                    sudo install \
+                        -o ubuntu \
+                        -g ubuntu \
+                        -m 600 \
+                        "$ENV_FILE" \
+                        "$APP_DIR/.env"
                     '''
                 }
             }
@@ -109,7 +114,7 @@ pipeline {
             steps {
                 sh '''
                 sleep 10
-                curl --fail $HEALTH_URL
+                curl --fail "$HEALTH_URL"
                 '''
             }
         }
@@ -144,9 +149,7 @@ pipeline {
                 echo "Rollback completed."
 
             else
-
                 echo "Rollback skipped."
-
             fi
             '''
         }
