@@ -7,6 +7,16 @@ pipeline {
 
     stages {
 
+        stage('Install Environment') {
+            steps {
+                withCredentials([file(credentialsId: 'multi-auth-env', variable: 'ENV_FILE')]) {
+                    sh '''
+                        cp "$ENV_FILE" .env
+                    '''
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
